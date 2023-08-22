@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import {
   TrendingContainer,
@@ -12,7 +12,8 @@ import 'slick-carousel/slick/slick-theme.css';
 
 function HomeTrending({ movies }) {
   const imgLink = 'https://image.tmdb.org/t/p/w500';
-  localStorage.clear();
+  const navigate = useNavigate();
+
   const settings = {
     dots: true,
     infinite: false,
@@ -48,12 +49,16 @@ function HomeTrending({ movies }) {
     ],
   };
 
+  const handleMovieClick = movieId => {
+    navigate(`/movies/${movieId}`);
+  };
+
   return (
     <div>
       <TrendingContainer>
         <Slider {...settings}>
           {movies?.map(movie => (
-            <Link to={`/movies/${movie.id}`} key={movie.id}>
+            <div onClick={() => handleMovieClick(movie.id)} key={movie.id}>
               <TrendingElement>
                 <TrendingImage
                   src={`${imgLink}${movie.poster_path}`}
@@ -61,7 +66,7 @@ function HomeTrending({ movies }) {
                 />
                 <TrendingMovieTitle>{movie.title}</TrendingMovieTitle>
               </TrendingElement>
-            </Link>
+            </div>
           ))}
         </Slider>
       </TrendingContainer>

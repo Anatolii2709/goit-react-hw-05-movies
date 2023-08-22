@@ -1,6 +1,6 @@
 import { getSearchFilm } from 'components/API/getFilm';
 import React, { useEffect, useState } from 'react';
-import { Link, useLocation, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   MovieButton,
   MovieContainer,
@@ -19,38 +19,32 @@ const Movies = () => {
   const [movieSearch, setMovieSearch] = useState({});
   const [movieInputValue, setMovieInputValue] = useState('');
 
-  const [searchParams, setSearchParams] = useSearchParams();
-  const movie = searchParams.get('movie') ?? '';
   const location = useLocation();
+  const navigate = useNavigate();
   const imgLink = 'https://image.tmdb.org/t/p/w500';
 
   const updateQueryString = evt => {
-    evt.target.value !== ''
-      ? setSearchParams({ movie: evt.target.value })
-      : setSearchParams({});
+    const value = evt.target.value;
+    setMovieInputValue(value);
   };
 
   useEffect(() => {
-    const localStMovies = localStorage.getItem('movies');
-    const parsedLocalStMovies = JSON.parse(localStMovies) ?? [];
+    const queryParams = new URLSearchParams(location.search);
+    const movieQuery = queryParams.get('movie') || '';
+    setMovieInputValue(movieQuery);
 
-    setMovieSearch(parsedLocalStMovies);
-  }, []);
-
-  useEffect(() => {
-    if (movieInputValue === '') return;
-    getSearchFilm(movieInputValue)
-      .then(data => {
-        setMovieSearch(data);
-        localStorage.setItem('movies', JSON.stringify(data));
-      })
-      .catch(err => console.error(err));
-  }, [movieInputValue]);
+    if (movieQuery !== '') {
+      getSearchFilm(movieQuery)
+        .then(data => {
+          setMovieSearch(data);
+        })
+        .catch(err => console.error(err));
+    }
+  }, [location.search]);
 
   const handleButtonClick = e => {
     e.preventDefault();
-    setMovieInputValue(movie);
-    setSearchParams('');
+    navigate(`/movies?movie=${encodeURIComponent(movieInputValue)}`);
   };
 
   return (
@@ -62,7 +56,7 @@ const Movies = () => {
         </MovieButton>
         <MovieLabel htmlFor="search">Search movies</MovieLabel>
         <MovieInput
-          value={movie}
+          value={movieInputValue}
           onChange={updateQueryString}
           placeholder="Search..."
           autoFocus
@@ -95,7 +89,7 @@ const Movies = () => {
         </MovieElementContainer>
       ) : (
         <MovieErrorTitle>
-          We don't find any movie with this title, please try to enter valid
+          We don't find any movie with this title, please try to enter a valid
           movie title
         </MovieErrorTitle>
       )}
